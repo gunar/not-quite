@@ -1,10 +1,11 @@
 'use strict'
 
-
-module.exports = async ({ secrets, headers, storage, query }, req, res) => {
+module.exports = ({ body, secrets, storage }, cb) => {
   const { get, set } = storage
   const { DEBUG } = secrets
-  const { return_url, email, service } = query
+  // TODO: match referer to make sure this service isn't DDoS'ed
+
+  const { return_url, email, service } = body
 
   storage.get((err, data) => {
     if (err) return console.error(err)
@@ -13,10 +14,7 @@ module.exports = async ({ secrets, headers, storage, query }, req, res) => {
     data[service].push(email)
     storage.set(data, err => {
       if (err) return console.log(err)
-      if (DEBUG) res.writeHead(200, { 'Content-Type': 'text/plain' })
-      else res.writeHead(200, { 'Content-Type': 'text/html' })
-      res.end(`<h1>Got it! Redirecting...</h1><script>document.setTimeout(() => {document.location='${query.return_url}'}, 1000)</script>`)
+      cb(DEBUG, 'Got it!')
     })
   })
-
 }
